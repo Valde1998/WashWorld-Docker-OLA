@@ -1,0 +1,122 @@
+name: washworld-ola
+
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "127.0.0.1:5001:5001"
+    environment:
+      DB_HOST: mariadb
+      DB_PORT: 3306
+      DB_USER: washworld
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      DB_NAME: cleanwash
+      DB_CONNECT_RETRIES: "3"
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Set JWT_SECRET_KEY in .env}
+      CORS_ORIGINS: ${FRONTEND_URL:-http://localhost:3000}
+      FLASK_DEBUG: "false"
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_APP_PASSWORD: ${SMTP_APP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
+      SMTP_TIMEOUT_SECONDS: ${SMTP_TIMEOUT_SECONDS:-15}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      EMAIL_VERIFICATION_TTL_MINUTES: ${EMAIL_VERIFICATION_TTL_MINUTES:-15}
+      EMAIL_VERIFICATION_RESEND_SECONDS: ${EMAIL_VERIFICATION_RESEND_SECONDS:-60}
+      BREVO_API_KEY: ${BREVO_API_KEY:-}
+      BREVO_API_URL: ${BREVO_API_URL:-https://api.brevo.com/v3/smtp/email}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-WashWorld}
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    networks:
+      - web
+      - data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5001/health/ready', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+    mem_limit: 512m
+    cpus: 1.0
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:5001}
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - web
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    mem_limit: 512m
+    cpus: 1.0
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+
+  mariadb:
+    image: mariadb:10.6.20
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Set DB_ROOT_PASSWORD in .env}
+      MARIADB_ROOT_HOST: localhost
+      MARIADB_DATABASE: cleanwash
+      MARIADB_USER: washworld
+      MARIADB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+    volumes:
+      - cleanwash_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./database/app-permissions.sql:/docker-entrypoint-initdb.d/02-app-permissions.sql:ro
+    networks:
+      - data
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    mem_limit: 768m
+    cpus: 1.0
+
+  phpmyadmin:
+    image: phpmyadmin:5.2.2
+    profiles: [tools]
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    environment:
+      PMA_HOST: mariadb
+    ports:
+      - "127.0.0.1:8080:80"
+    networks:
+      - web
+      - data
+    mem_limit: 256m
+    cpus: 0.5
+
+networks:
+  web:
+  data:
+    internal: true
+
+volumes:
+  # The project name isolates this demo from any existing WashWorld database.
+  cleanwash_data:
