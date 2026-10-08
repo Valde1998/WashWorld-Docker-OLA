@@ -1,60 +1,42 @@
-# Presentation notes
+# OLA demo notes
 
-## 0–1 minutes: the project
+Prepare the images and demo user before presenting. Have the README, Compose file, Dockerfiles and browser open. The presentation is a ten-minute group presentation on Teams.
 
-WashWorld is an existing car wash app with a Next.js frontend, Flask backend and MariaDB database. Docker Compose runs them together so developers do not need to install each part separately.
+## 1. Introduce the app
 
-## 1–3 minutes: architecture
+WashWorld has a Next.js frontend, Flask backend and MariaDB database. Docker Compose starts them together.
 
-- An image contains the app and its runtime; a container runs that image.
-- The browser reaches frontend port 3000 and backend port 5001 on localhost.
-- The frontend and backend share `web`. The backend finds `mariadb:3306` on the internal `data` network; MariaDB has no host port.
-- The `cleanwash_data` named volume stores the database at `/var/lib/mysql` and survives container removal.
-- Readiness checks make MariaDB ready before the backend starts, then the backend ready before the frontend starts.
+## 2. Show the setup
 
-Show the actual service, network and volume names in `docker-compose.yml`. Explain that Compose prefixes network and volume names with its project name.
+Open `docker-compose.yml` and explain the ports, `web`/`data` networks and database volume. Then show the multi-stage builds and non-root users in the Dockerfiles. Secrets are in `.env`; keep its contents private.
 
-## 3–5 minutes: implementation choices
-
-Open the Dockerfiles and relevant Compose sections. Explain two or three choices:
-
-- The frontend's dependencies/build/runtime stages keep development packages out of the final image. The backend also separates dependency installation from its runtime.
-- Frontend and backend app processes run as non-root users (`node` and `app`), drop capabilities and prevent privilege escalation. **The tested Docker engine is not rootless.** Do not describe a `USER` instruction as proof of a rootless engine.
-- Secrets come from a local `.env`, which is not shared on GitHub. Do not display its contents.
-- CPU/RAM limits constrain resource use; they are different from the actual usage shown by `stats`.
-
-## 5–8 minutes: live demo
-
-Build the images and create the demo user before the presentation, following the README. Stop any other stack using ports 3000 and 5001. Use commands for the same Compose project throughout the demo.
+## 3. Show the app working
 
 ```powershell
+docker compose up -d
 docker compose ps
-docker compose exec -T backend python -m unittest discover -s tests -v
-docker compose stats --no-stream
 ```
 
-Show three healthy services. Log in, open the profile and save a visible name change. Note what was saved. If using the recorded test database, Activity also contains the test wash.
+Once all services are healthy, log in at http://localhost:3000. Show the locations and save a profile change.
+
+## 4. Show that data is kept
 
 ```powershell
 docker compose down
-docker compose up -d --wait --wait-timeout 180
+docker compose up -d
 ```
 
-Log in again and show the saved profile value. Explain that the containers were removed and recreated, while the database volume was retained. Do not use `-v`.
+Wait for healthy services, log in again and show the saved change. Explain that the containers were recreated while the database volume was kept. Do not use `-v`.
 
-The recorded verification used project `washworld-ola-test` with a separate env file and volume. Plain `docker compose` targets the default project, so use the default README setup for this sequence or explicitly select the test project's file, env file and name for every command.
+## 5. Tests and limitations
 
-## 8–10 minutes: evidence and reflection
+```powershell
+docker compose exec backend python -m unittest discover -s tests
+docker stats --no-stream
+```
 
-Open `TEST_STATUS.md` and explain what the results demonstrate:
+Use [TEST_STATUS.md](TEST_STATUS.md) to explain the results. Stats shows a snapshot of CPU and memory use, not a load test.
 
-- Docker builds, frontend lint and startup passed.
-- All 19 backend unit tests passed; they use mocks.
-- 16 real-database integration checks passed before recreation, and 14 checks passed afterward.
-- Login/profile worked through the browser, and user/profile/wash-history data survived `down`/`up` without `-v`.
-- Recorded RAM usage was about 42 MiB for the frontend, 43 MiB for the backend and 65 MiB for MariaDB. These are dated snapshots after ordinary use, not a load test. Show a fresh `stats` sample if possible.
-- The frontend runtime image was about 81 MiB versus 263 MiB for its build stage in the recorded measurement.
+Email is not configured, and Cypress has not been tested. The app processes are non-root, but the Docker Desktop engine is not rootless. Explain this difference accurately: rootless is mentioned in the assignment and is not part of this simpler setup.
 
-Identify an actual limitation: default signup cannot deliver verification emails until SMTP/Brevo is configured; actual mail delivery and Cypress are not verified; the engine is not rootless. Describe the implemented non-root app protections precisely.
-
-The presentation is a ten-minute group presentation on Teams. Check the booking and submit the repository link/README as required before the 9 October deadline. Slides are optional; the repository, terminal and browser can provide the demonstration.
+Remember to book a time and submit the repository link and README as instructed.

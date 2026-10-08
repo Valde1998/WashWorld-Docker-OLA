@@ -1,12 +1,12 @@
-# WashWorld with Docker
+# WashWorld – Docker OLA
 
-WashWorld is a car wash app with login, memberships, wash locations and wash history. This is the Docker version of [WashWorldValde](https://github.com/Valde1998/WashWorldValde) for the OLA in Development Environments.
+WashWorld is a car wash app with memberships, locations and wash history, based on [WashWorldValde](https://github.com/Valde1998/WashWorldValde). For this OLA, the existing app runs with Docker Compose so the frontend, backend and database can start together.
 
-Docker Compose runs the frontend, backend and database together without installing each one separately. The Docker build, startup, login and database persistence were tested on 8 October 2026. See [TEST_STATUS.md](TEST_STATUS.md) for the results, measurements and remaining limitations.
+## Run the project
 
-## Getting started
+You need Git and Docker Desktop with Linux containers. Start Docker Desktop and make sure ports 3000 and 5001 are available.
 
-You'll need Git and Docker Desktop running with Linux containers. Use Docker Compose with support for `--wait`; the recorded test used Compose v5.1.3. Ports 3000 and 5001 need to be free. These commands are for PowerShell:
+For a fresh checkout in PowerShell:
 
 ```powershell
 git clone https://github.com/Valde1998/WashWorld-Docker-OLA.git
@@ -14,79 +14,54 @@ cd WashWorld-Docker-OLA
 Copy-Item .env.example .env
 ```
 
-Open `.env` and replace `DB_ROOT_PASSWORD`, `DB_PASSWORD` and `JWT_SECRET_KEY` with three different, long, random values. The JWT key needs at least 32 characters. Keep this file on your computer, not on GitHub.
+Set `DB_ROOT_PASSWORD`, `DB_PASSWORD` and `JWT_SECRET_KEY` in `.env` to three different, long random values. The JWT key must be at least 32 characters. `.env` is ignored by Git. If you already have a configured file, keep it.
 
-Then run:
+Build and start the app from the project folder:
 
 ```powershell
-docker compose config --quiet
-docker compose up --build -d --wait --wait-timeout 180
+docker compose up --build -d
 docker compose ps
 ```
 
-All three main services should become `healthy`. Open [localhost:3000](http://localhost:3000). The first build takes longer because Docker downloads images and installs packages.
+Wait until all three services are `healthy`, then open [localhost:3000](http://localhost:3000). The first build may take a while.
 
-## How the Docker setup works
+## Demo login
 
-[docker-compose.yml](docker-compose.yml) defines three main services: Next.js for the frontend, Flask for the backend and MariaDB for the database. The browser reaches the frontend on host port 3000 and calls the backend on host port 5001. Both ports are published only on `127.0.0.1`.
-
-The frontend and backend share the named `web` network. The backend and database share the internal named `data` network. The backend uses `mariadb:3306` as the database address; `localhost` inside a container would point back to that container. MariaDB has no published host port.
-
-MariaDB saves its data in the named `cleanwash_data` volume at `/var/lib/mysql`. Compose prefixes the actual network and volume names with its project name. Normal startup uses `washworld-ola`; the recorded test used a separate `washworld-ola-test` project and a fresh volume.
-
-The SQL initialization files are mounted read-only and run only when the database volume is empty. Readiness checks make the backend wait for MariaDB, and the frontend wait for the backend. The backend's `/health/ready` endpoint runs a real database query.
-
-### Build stages and security choices
-
-[frontend/Dockerfile](frontend/Dockerfile) has dependencies, build and runtime stages. `npm ci` installs the lockfile's packages; the build stage compiles Next.js; the runtime stage gets the standalone server, static files and public assets. Development packages stay out of the runtime image. `NEXT_PUBLIC_API_URL` is set at build time because browser code needs it.
-
-[backend/Dockerfile](backend/Dockerfile) has dependencies and runtime stages. Dependencies are installed separately, then copied into a slim Python runtime that starts the app with Gunicorn. Copying the package manifests before the app code lets Docker reuse dependency layers when only the app code changes. `.dockerignore` keeps local packages and `.env` out of the build context.
-
-The frontend app process runs as `node` (UID 1000), and the backend as `app` (UID 10001). Both appservices drop all Linux capabilities and set `no-new-privileges`. The backend uses the `washworld` database user, not DB-root. Its database privileges are SELECT, INSERT, UPDATE, DELETE and CREATE on `cleanwash.*`; CREATE supports application startup.
-
-These are verified non-root application processes. **The tested Docker Desktop engine does not run in rootless mode.** A Dockerfile `USER` instruction alone does not make the engine rootless or establish that an entire deployment is secure.
-
-Compose limits frontend and backend to 512 MiB RAM and one CPU each; MariaDB has 768 MiB and one CPU. These are limits, not the amount of memory the services always use. Actual measurements and image sizes are in [TEST_STATUS.md](TEST_STATUS.md).
-
-## Trying it out
-
-Signup normally sends a verification email. Email delivery isn't configured by default, so create a local demo user:
+Email is not configured by default. Create a local demo user with:
 
 ```powershell
 docker compose exec backend python demo_user.py
 ```
 
-Choose a password with at least 8 characters, then log in with `demo@washworld.invalid`. The password is hashed, and the script won't overwrite an existing demo account. Normal signup needs SMTP or Brevo settings in `.env`.
+Choose a password of at least eight characters and log in with `demo@washworld.invalid`. If the account already exists, the script leaves it unchanged. Regular signup needs SMTP or Brevo to send the verification email.
 
-Log in, view the membership and wash locations, and save a profile change. These commands check container status, run the backend tests and show CPU and memory use:
+## How it works
+
+- **Frontend:** Next.js on port 3000.
+- **Backend:** Flask on port 5001.
+- **Database:** MariaDB, reached by the backend at `mariadb:3306`.
+
+[docker-compose.yml](docker-compose.yml) connects the services through the `web` and `data` networks. The database port is not published to the host, and the app ports are only available on localhost. MariaDB stores its data in the `cleanwash_data` volume at `/var/lib/mysql`.
+
+Both Dockerfiles use multi-stage builds, and the frontend/backend run as non-root users. Health checks check that services are ready. Compose also sets CPU and memory limits.
+
+## Test and stop
+
+Run the backend tests, view logs and check resource use:
 
 ```powershell
-docker compose ps
-docker compose exec -T backend python -m unittest discover -s tests -v
-docker compose stats --no-stream
+docker compose exec backend python -m unittest discover -s tests
+docker compose logs --tail=50
+docker stats --no-stream
 ```
 
-Open [localhost:5001/health/ready](http://localhost:5001/health/ready) to check the backend's database connection. The unit tests use mocks, so they are separate from the recorded integration checks against MariaDB.
-
-### Check persistence and stop the app
-
-First log in and save a profile change. Note the name or number plate you saved. Then remove and start the containers again:
+To check persistence, save a profile change and then run:
 
 ```powershell
 docker compose down
-docker compose up -d --wait --wait-timeout 180
+docker compose up -d
 ```
 
-Log in with the same user and check that your profile change is still there. In the recorded test, the user, profile change and a wash-history entry survived this sequence.
+Once the services are ready, log in again and check that your change is still there. Stop the app with `docker compose down`. Leave out `-v` if you want to keep the database.
 
-Use `docker compose down` to stop and remove the containers and networks while keeping the named database volume. **Do not add `-v` if you need the data:** it removes the named volume too.
-
-## Troubleshooting and limitations
-
-If startup fails, check `docker compose logs --tail=100 backend mariadb frontend`. Confirm that Docker Desktop is running and that ports 3000 and 5001 are free. Only one stack can use these host ports at a time, including a separately named test stack.
-
-The SQL setup files only run when the database volume is empty. Don't run `init.sql` manually on existing data: it drops tables. Changing passwords in `.env` won't update an already-created database either.
-
-If you change `NEXT_PUBLIC_API_URL`, rebuild the frontend with the startup command above. Optional phpMyAdmin can be started with `docker compose --profile tools up -d phpmyadmin`. It's at [localhost:8080](http://localhost:8080), using `washworld` and the `DB_PASSWORD` from `.env`. This optional service was not part of the recorded test.
-
-This is a local school demo. Actual email delivery and the complete email-verification/password-reset flows have not been tested, and the existing Cypress tests have not been run. There is no source-code bind mount for hot reload; the recorded volume test demonstrates database persistence. The non-root apps run on a Docker engine that is not rootless. See [TEST_STATUS.md](TEST_STATUS.md) for the full test scope and [PRESENTATION.md](PRESENTATION.md) for the demo sequence.
+See [test results](TEST_STATUS.md) and [demo notes](PRESENTATION.md). Email flows and Cypress have not been tested. The Docker Desktop engine is not rootless; non-root app users are a separate protection. This is a limitation regarding [the assignment's mention of rootless](https://ek.itslearning.com/main.aspx?CourseID=7577&ElementID=1566430&ElementType=131072).
