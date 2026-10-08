@@ -1,0 +1,156 @@
+{
+  "initial": [
+    {
+      "name": "database readiness",
+      "passed": true,
+      "detail": "HTTP 200"
+    },
+    {
+      "name": "real seeded locations",
+      "passed": true,
+      "detail": "71 locations"
+    },
+    {
+      "name": "real seeded membership plans",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "protected profile rejects missing token",
+      "passed": true,
+      "detail": "HTTP 401"
+    },
+    {
+      "name": "protected profile rejects invalid token",
+      "passed": true,
+      "detail": "HTTP 422"
+    },
+    {
+      "name": "incorrect password rejected",
+      "passed": true,
+      "detail": "HTTP 401"
+    },
+    {
+      "name": "login against MariaDB",
+      "passed": true,
+      "detail": "HTTP 200"
+    },
+    {
+      "name": "authenticated profile",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "password hash absent from API",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "profile write to real database",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "wash history write",
+      "passed": true,
+      "detail": "HTTP 201"
+    },
+    {
+      "name": "invalid write rejected",
+      "passed": true,
+      "detail": "HTTP 400"
+    },
+    {
+      "name": "wash history readable and persistent",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "configured frontend CORS",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "other origin not granted CORS",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Docker frontend serves homepage",
+      "passed": true,
+      "detail": ""
+    }
+  ],
+  "post_restart": [
+    {
+      "name": "database readiness",
+      "passed": true,
+      "detail": "HTTP 200"
+    },
+    {
+      "name": "real seeded locations",
+      "passed": true,
+      "detail": "71 locations"
+    },
+    {
+      "name": "real seeded membership plans",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "protected profile rejects missing token",
+      "passed": true,
+      "detail": "HTTP 401"
+    },
+    {
+      "name": "protected profile rejects invalid token",
+      "passed": true,
+      "detail": "HTTP 422"
+    },
+    {
+      "name": "incorrect password rejected",
+      "passed": true,
+      "detail": "HTTP 401"
+    },
+    {
+      "name": "login against MariaDB",
+      "passed": true,
+      "detail": "HTTP 200"
+    },
+    {
+      "name": "authenticated profile",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "password hash absent from API",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "profile survives container removal",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "wash history readable and persistent",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "configured frontend CORS",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "other origin not granted CORS",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Docker frontend serves homepage",
+      "passed": true,
+      "detail": ""
+    }
+  ]
+}

@@ -1,0 +1,153 @@
+{
+  "time_utc": "2026-10-08T00:24:56.747394+00:00",
+  "containers": [
+    {
+      "service": "frontend",
+      "name": "/washworld-ola-test-frontend-1",
+      "image": "washworld-ola-test-frontend",
+      "user": "node",
+      "health": "healthy",
+      "memory_bytes": 536870912,
+      "nano_cpus": 1000000000,
+      "cap_drop": [
+        "ALL"
+      ],
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "port_bindings": {
+        "3000/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "3000"
+          }
+        ]
+      },
+      "networks": [
+        "washworld-ola-test_web"
+      ],
+      "mounts": [],
+      "process_identity": "uid=1000(node) gid=1000(node) groups=1000(node)",
+      "image_size_bytes": 85379342
+    },
+    {
+      "service": "backend",
+      "name": "/washworld-ola-test-backend-1",
+      "image": "washworld-ola-test-backend",
+      "user": "app",
+      "health": "healthy",
+      "memory_bytes": 536870912,
+      "nano_cpus": 1000000000,
+      "cap_drop": [
+        "ALL"
+      ],
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "port_bindings": {
+        "5001/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "5001"
+          }
+        ]
+      },
+      "networks": [
+        "washworld-ola-test_data",
+        "washworld-ola-test_web"
+      ],
+      "mounts": [],
+      "process_identity": "uid=10001(app) gid=10001(app) groups=10001(app)",
+      "image_size_bytes": 65566760
+    },
+    {
+      "service": "mariadb",
+      "name": "/washworld-ola-test-mariadb-1",
+      "image": "mariadb:10.6.20",
+      "user": "",
+      "health": "healthy",
+      "memory_bytes": 805306368,
+      "nano_cpus": 1000000000,
+      "cap_drop": null,
+      "security_opt": null,
+      "port_bindings": {},
+      "networks": [
+        "washworld-ola-test_data"
+      ],
+      "mounts": [
+        {
+          "Type": "bind",
+          "Name": null,
+          "Destination": "/docker-entrypoint-initdb.d/02-app-permissions.sql",
+          "RW": false
+        },
+        {
+          "Type": "volume",
+          "Name": "washworld-ola-test_cleanwash_data",
+          "Destination": "/var/lib/mysql",
+          "RW": true
+        },
+        {
+          "Type": "bind",
+          "Name": null,
+          "Destination": "/docker-entrypoint-initdb.d/01-init.sql",
+          "RW": false
+        }
+      ],
+      "image_size_bytes": 121041900
+    }
+  ],
+  "engine": {
+    "version": "29.4.2",
+    "security": [
+      "name=seccomp,profile=builtin",
+      "name=cgroupns"
+    ]
+  },
+  "data_network": {
+    "name": "washworld-ola-test_data",
+    "internal": true
+  },
+  "database_security": {
+    "password_hashed": true,
+    "grants": [
+      "GRANT USAGE ON *.* TO `washworld`@`%`",
+      "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE ON `cleanwash`.* TO `washworld`@`%`"
+    ]
+  },
+  "stats_during_checks": [
+    {
+      "BlockIO": "1.65MB / 41kB",
+      "CPUPerc": "0.00%",
+      "Container": "fc942d2b367484f0584c71b53b44f60312c7f7eb109a696b5150fa1f690245c9",
+      "ID": "fc942d2b3674",
+      "MemPerc": "9.65%",
+      "MemUsage": "49.41MiB / 512MiB",
+      "Name": "washworld-ola-test-frontend-1",
+      "NetIO": "38.5kB / 141kB",
+      "PIDs": "19"
+    },
+    {
+      "BlockIO": "3.36MB / 0B",
+      "CPUPerc": "82.16%",
+      "Container": "462c84c77a5ddb81e4649975a946ae18f0de864c3e69b24a856d469fe1dfa019",
+      "ID": "462c84c77a5d",
+      "MemPerc": "8.99%",
+      "MemUsage": "46.02MiB / 512MiB",
+      "Name": "washworld-ola-test-backend-1",
+      "NetIO": "157kB / 287kB",
+      "PIDs": "4"
+    },
+    {
+      "BlockIO": "69.6MB / 51.8MB",
+      "CPUPerc": "18.21%",
+      "Container": "51d495e1a008d04aa6acfdb4da4a6ba653a8672f6cabe9909dac98a1846bcbbb",
+      "ID": "51d495e1a008",
+      "MemPerc": "13.39%",
+      "MemUsage": "102.9MiB / 768MiB",
+      "Name": "washworld-ola-test-mariadb-1",
+      "NetIO": "142kB / 139kB",
+      "PIDs": "12"
+    }
+  ]
+}

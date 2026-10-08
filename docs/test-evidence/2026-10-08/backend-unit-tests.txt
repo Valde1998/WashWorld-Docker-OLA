@@ -1,0 +1,25 @@
+test connection failure
+test_demo_password_is_hashed (test_docker_support.DockerSupportTests.test_demo_password_is_hashed) ... ok
+test_demo_user_never_overwrites_existing_account (test_docker_support.DockerSupportTests.test_demo_user_never_overwrites_existing_account) ... ok
+test_liveness_does_not_require_database (test_docker_support.DockerSupportTests.test_liveness_does_not_require_database) ... ok
+test_readiness_checks_database (test_docker_support.DockerSupportTests.test_readiness_checks_database) ... ok
+test_readiness_fails_when_database_fails (test_docker_support.DockerSupportTests.test_readiness_fails_when_database_fails) ... ok
+test_brevo_api_includes_html_button (test_email_service.EmailServiceTests.test_brevo_api_includes_html_button) ... ok
+test_brevo_api_is_preferred_when_configured (test_email_service.EmailServiceTests.test_brevo_api_is_preferred_when_configured) ... ok
+test_email_uses_tls_and_login (test_email_service.EmailServiceTests.test_email_uses_tls_and_login) ... ok
+test_missing_credentials_are_rejected (test_email_service.EmailServiceTests.test_missing_credentials_are_rejected) ... ok
+test_email_is_normalized (test_validators.ValidatorTests.test_email_is_normalized) ... ok
+test_email_with_consecutive_dots_is_rejected (test_validators.ValidatorTests.test_email_with_consecutive_dots_is_rejected) ... ok
+test_invalid_email_is_rejected (test_validators.ValidatorTests.test_invalid_email_is_rejected) ... ok
+test_license_plate_is_normalized (test_validators.ValidatorTests.test_license_plate_is_normalized) ... ok
+test_positive_integer_must_be_greater_than_zero (test_validators.ValidatorTests.test_positive_integer_must_be_greater_than_zero) ... ok
+test_short_password_is_rejected (test_validators.ValidatorTests.test_short_password_is_rejected) ... ok
+test_verification_token_accepts_url_safe_value (test_validators.ValidatorTests.test_verification_token_accepts_url_safe_value) ... ok
+test_every_location_has_navigation_and_address_data (test_washworld_locations.WashWorldLocationTests.test_every_location_has_navigation_and_address_data) ... ok
+test_official_location_list_has_71_unique_entries (test_washworld_locations.WashWorldLocationTests.test_official_location_list_has_71_unique_entries) ... ok
+test_raw_tuple_shape_is_stable (test_washworld_locations.WashWorldLocationTests.test_raw_tuple_shape_is_stable) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 0.897s
+
+OK
